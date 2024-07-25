@@ -1,0 +1,272 @@
+Description of design:
+Linked list Design
+The implementation uses a doubly linked list to manage cricketers in the CricketTeam class. 
+The list is neither circular nor does it have a dummy node. Each node in the list contains the following information:
+
+First Name: The first name of the cricketer.
+Last Name: The last name of the cricketer.
+Value: An instance of CricketType which stores an integer value representing the cricketer's statistics or some relevant information.
+Previous Node Pointer: A pointer to the previous node in the list.
+Next Node Pointer: A pointer to the next node in the list.
+
+Why I chose Doubly Linked List:
+
+Bidirectional Traversal: Allows for efficient traversal in both directions, making insertion, deletion, and searching operations more flexible and efficient.
+
+Why I chose Non-Circular and No Dummy Node:
+
+Simplification: Simplifies the implementation by eliminating the need to handle circular links or manage a dummy node, which reduces the complexity and potential for errors.
+
+Pseudo code for releaseCricketer, mergeCricketers and swap:
+
+Pseudocode for releaseCricketer
+Function: releaseCricketer
+Purpose: Remove a cricketer from the list by their full name. Return true if the cricketer was found and removed, false otherwise.
+
+FUNCTION releaseCricketer(firstName, lastName)
+    // Check if the list is empty
+    IF head IS NULL AND tail IS NULL THEN
+        RETURN false
+
+    // Initialize a pointer to traverse the list
+    SET current TO head
+
+    // Traverse the list to find the cricketer
+    WHILE current IS NOT NULL DO
+        // Check if the current node matches the cricketer to be released
+        IF current.firstName EQUALS firstName AND current.lastName EQUALS lastName THEN
+            // If only one node in the list
+            IF current EQUALS head AND current EQUALS tail THEN
+                DELETE current
+                SET head TO NULL
+                SET tail TO NULL
+                RETURN true
+
+            // If the node to be removed is the head node
+            ELSE IF current EQUALS head THEN
+                SET head TO head.next
+                SET head.previous TO NULL
+                DELETE current
+                RETURN true
+
+            // If the node to be removed is the tail node
+            ELSE IF current EQUALS tail THEN
+                SET tail TO tail.previous
+                SET tail.next TO NULL
+                DELETE current
+                RETURN true
+
+            // If the node to be removed is in the middle
+            ELSE
+                SET before TO current.previous
+                SET after TO current.next
+                SET before.next TO after
+                SET after.previous TO before
+                DELETE current
+                RETURN true
+
+        // Move to the next node
+        SET current TO current.next
+
+    // If the cricketer is not found in the list
+    RETURN false
+END FUNCTION
+
+Pseudocode for mergeCricketers
+Function: mergeCricketers
+Purpose: Merge two cricket teams into a third one, ensuring all cricketers are included and values are consistent. Return true if no conflicts in values, false otherwise.
+
+FUNCTION mergeCricketers(odOne, odTwo, odJoined)
+    SET isConsistent TO true
+    DECLARE valueOne, valueTwo AS CricketType
+    DECLARE first, last AS STRING
+
+    // Clear existing cricketers in odJoined
+    FOR i FROM 0 TO odJoined.cricketerCount() - 1
+        IF odJoined.checkTeamForCricketer(i, first, last, valueOne) THEN
+            odJoined.releaseCricketer(first, last)
+        END IF
+    END FOR
+
+    // Add cricketers from odOne to odJoined
+    FOR i FROM 0 TO odOne.cricketerCount() - 1
+        IF odOne.checkTeamForCricketer(i, first, last, valueOne) THEN
+            IF odTwo.searchForCricketer(first, last, valueTwo) THEN
+                IF valueOne EQUALS valueTwo THEN
+                    odJoined.addOrSubstitute(first, last, valueOne)
+                ELSE
+                    SET isConsistent TO false
+                END IF
+            ELSE
+                odJoined.addOrSubstitute(first, last, valueOne)
+            END IF
+        END IF
+    END FOR
+
+    // Add cricketers from odTwo to odJoined if not in odOne
+    FOR i FROM 0 TO odTwo.cricketerCount() - 1
+        IF odTwo.checkTeamForCricketer(i, first, last, valueTwo) THEN
+            IF NOT odOne.searchForCricketer(first, last, valueOne) THEN
+                odJoined.addOrSubstitute(first, last, valueTwo)
+            END IF
+        END IF
+    END FOR
+
+    RETURN isConsistent
+END FUNCTION
+
+Pseudocode for swap
+Function: swap
+Purpose: Efficiently exchange the contents of two CricketTeam objects by swapping their head and tail pointers.
+
+FUNCTION swap(other):
+    // Swap the head pointers of the two CricketTeam objects
+    SWAP head WITH other.head
+
+    // Swap the tail pointers of the two CricketTeam objects
+    SWAP tail WITH other.tail
+END FUNCTION
+
+
+Notable Obastcles overcame:
+One problem I had was linking the nodes to the previous in the copy constructor.
+I fixed this by creating a variable to store the head value so I could set the tail value to it and
+I also created the node inside the loop so I could link it to the previous value.
+Another problem I had was ensuring the cricket players were in last name order.
+I fixed this by first creating a new node, then traversing through the list to see where the node
+would be appended to and linking the node to adjacent nodes.
+Another obstacle I faced was making sure all the nodes were linked up correctly in addCricketer.
+I fixed this by creating multiple checks and using a the function rosteredcricket to see if the Cricket was already
+on the team.
+
+
+Test cases:
+// Default constructor
+    // Test case 1: Default constructor and noTeam
+    CricketTeam sriLankaCricket;
+    assert(sriLankaCricket.cricketerCount() == 0); // Verify team is empty
+    assert(sriLankaCricket.noTeam()); // Team should be empty
+
+    // Test case 2: Add a single cricketer
+    assert(sriLankaCricket.addCricketer("Wanindu", "Hasaranga", 1)); // Add one cricketer
+    assert(sriLankaCricket.cricketerCount() == 1); // Size should be 1
+    assert(!sriLankaCricket.noTeam()); // Team should not be empty
+
+    // Test Set 2: Checking Roster and Adding Duplicates
+    // Purpose: Verify checking roster status and handling duplicate additions.
+
+    // Test case 3: Check rostered status
+    assert(sriLankaCricket.rosteredOnCricketTeam("Wanindu", "Hasaranga")); // Cricketer should be in the team
+    assert(!sriLankaCricket.rosteredOnCricketTeam("Angelo", "Mathews")); // Cricketer should not be in the team
+
+    // Test case 4: Add duplicate cricketer
+    assert(!sriLankaCricket.addCricketer("Wanindu", "Hasaranga", 1)); // Should not add duplicate
+    assert(sriLankaCricket.cricketerCount() == 1); // Size should remain 1
+
+    // Test Set 3: Substituting Cricketers
+    // Purpose: Verify the substitution of cricketer values.
+
+    // Test case 5: Substitute cricketer's value
+    assert(sriLankaCricket.substituteCricketer("Wanindu", "Hasaranga", 2)); // Substitute value
+    CricketType value;
+    assert(sriLankaCricket.searchForCricketer("Wanindu", "Hasaranga", value));
+    assert(value == 2); // Value should be updated
+
+    // Test Set 4: Add or Substitute Cricketers
+    // Purpose: Verify the addOrSubstitute function.
+
+    // Test case 6: Add or substitute (substitute case)
+    assert(sriLankaCricket.addOrSubstitute("Wanindu", "Hasaranga", 3));
+    assert(sriLankaCricket.searchForCricketer("Wanindu", "Hasaranga", value));
+    assert(value == 3); // Value should be updated again
+
+    // Test case 7: Add or substitute (add case)
+    assert(sriLankaCricket.addOrSubstitute("Angelo", "Mathews", 4));
+    assert(sriLankaCricket.cricketerCount() == 2); // Size should be 2 now
+    assert(sriLankaCricket.searchForCricketer("Angelo", "Mathews", value));
+    assert(value == 4); // Angelo Mathews should be added with value 4
+
+    // Test Set 5: Releasing Cricketers
+    // Purpose: Verify the release of cricketers.
+
+    // Test case 8: Release cricketer
+    assert(sriLankaCricket.releaseCricketer("Wanindu", "Hasaranga"));
+    assert(sriLankaCricket.cricketerCount() == 1); // Size should be 1
+    assert(!sriLankaCricket.rosteredOnCricketTeam("Wanindu", "Hasaranga")); // Wanindu should be removed
+
+    // Test Set 6: Adding Multiple Cricketers
+    // Purpose: Verify adding multiple cricketers and the order.
+
+    // Test case 9: Add multiple cricketers
+    assert(sriLankaCricket.addCricketer("Kusal", "Perera", 5));
+    assert(sriLankaCricket.addCricketer("Dimuth", "Karunaratne", 6));
+    assert(sriLankaCricket.addCricketer("Dinesh", "Chandimal", 7));
+    assert(sriLankaCricket.cricketerCount() == 4); // Size should be 4
+
+    // Test Set 7: Sorted Order
+    // Purpose: Verify that cricketers are added in sorted order by last name.
+
+    // Test case 10: Check sorted order
+    std::string firstName, lastName;
+    assert(sriLankaCricket.checkTeamForCricketer(0, firstName, lastName, value));
+    assert(firstName == "Dinesh" && lastName == "Chandimal");
+    assert(sriLankaCricket.checkTeamForCricketer(1, firstName, lastName, value));
+    assert(firstName == "Dimuth" && lastName == "Karunaratne");
+    assert(sriLankaCricket.checkTeamForCricketer(2, firstName, lastName, value));
+    assert(firstName == "Angelo" && lastName == "Mathews");
+    assert(sriLankaCricket.checkTeamForCricketer(3, firstName, lastName, value));
+    assert(firstName == "Kusal" && lastName == "Perera");
+
+    // Test Set 8: Edge Cases for Release
+    // Purpose: Verify handling of edge cases for releasing cricketers.
+
+    // Test case 11: Release non-existent cricketer
+    assert(!sriLankaCricket.releaseCricketer("Non", "Existent")); // Should return false
+
+    // Test case 12: Release all cricketers and verify empty state
+    assert(sriLankaCricket.releaseCricketer("Dimuth", "Karunaratne"));
+    assert(sriLankaCricket.releaseCricketer("Kusal", "Perera"));
+    assert(sriLankaCricket.releaseCricketer("Angelo", "Mathews"));
+    assert(sriLankaCricket.releaseCricketer("Dinesh", "Chandimal"));
+    assert(sriLankaCricket.cricketerCount() == 0);
+    assert(sriLankaCricket.noTeam()); // Should be empty
+
+    
+    // Example 1
+    CricketTeam odOne1, odTwo1, odJoined1;
+    odOne1.addCricketer("Trent", "Boult", 18);
+    odOne1.addCricketer("Tim", "David", 8);
+    odOne1.addCricketer("Rashid", "Khan", 19);
+
+    odTwo1.addCricketer("Trent", "Boult", 18);
+    odTwo1.addCricketer("Tim", "Southee", 38);
+    odTwo1.addCricketer("Kane", "Williamson", 22);
+
+    // Test merging odOne1 and odTwo1 into odJoined1
+    assert(mergeCricketers(odOne1, odTwo1, odJoined1) == true);
+    // Verify the number of cricketers in the joined team
+    assert(odJoined1.cricketerCount() == 5); // Expecting 5 cricketers
+    // Verify each cricketer is present with the correct value
+    assert(odJoined1.searchForCricketer("Trent", "Boult", value) && value == 18);
+    assert(odJoined1.searchForCricketer("Tim", "David", value) && value == 8);
+    assert(odJoined1.searchForCricketer("Rashid", "Khan", value) && value == 19);
+    assert(odJoined1.searchForCricketer("Tim", "Southee", value) && value == 38);
+    assert(odJoined1.searchForCricketer("Kane", "Williamson", value) && value == 22);
+
+    // Example 2
+    CricketTeam odOne2, odTwo2, odJoined2;
+    odOne2.addCricketer("Quinton", "DeCock", 12);
+    odOne2.addCricketer("Faf", "DuPlessis", 17);
+    odOne2.addCricketer("Kagiso", "Rabada", 25);
+
+    odTwo2.addCricketer("Faf", "DuPlessis", 13);
+    odTwo2.addCricketer("Virat", "Kohli", 18);
+
+    // Test merging odOne2 and odTwo2 into odJoined2
+    assert(mergeCricketers(odOne2, odTwo2, odJoined2) == false);
+    // Verify the number of cricketers in the joined team
+    assert(odJoined2.cricketerCount() == 3); // Expecting 3 cricketers
+    // Verify each cricketer is present with the correct value
+    assert(odJoined2.searchForCricketer("Quinton", "DeCock", value) && value == 12);
+    assert(odJoined2.searchForCricketer("Kagiso", "Rabada", value) && value == 25);
+    assert(odJoined2.searchForCricketer("Virat", "Kohli", value) && value == 18);
